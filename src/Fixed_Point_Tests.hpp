@@ -14,10 +14,9 @@ class Fixed_Point_Tests
 {
 private:
 	std::ostream& os;
-	const int header_prec;
 
 public:
-	Fixed_Point_Tests(std::ostream& os = std::cout, int header_prec = 6);
+	Fixed_Point_Tests(std::ostream& os = std::cout);
 	virtual ~Fixed_Point_Tests();
 
 	/*

@@ -5,8 +5,8 @@
 
 #define os_nline    os << std::endl
 
-Fixed_Point_Tests::Fixed_Point_Tests(std::ostream& os, int header_prec)
-: os(os), header_prec(header_prec)
+Fixed_Point_Tests::Fixed_Point_Tests(std::ostream& os)
+: os(os)
 {
 }
 
@@ -26,7 +26,7 @@ void Fixed_Point_Tests::test_arithmetics(A a, B b)
 	increment     (a,b);
 	decrement     (a,b);
 
-	os << bold_orange("**********************************************"); os_nline;
+	os << bold_orange("**********************************************"); os_nline; os_nline;
 }
 
 template <typename A, typename B, typename C>
@@ -41,7 +41,7 @@ void Fixed_Point_Tests::test_arithmetics(A a, B b, C c)
 	increment     (a,b,c);
 	decrement     (a,b,c);
 
-	os << bold_orange("**********************************************"); os_nline;
+	os << bold_orange("**********************************************"); os_nline; os_nline;
 }
 
 template <typename A, typename B>
@@ -57,7 +57,7 @@ void Fixed_Point_Tests::test_comparisons(A a, B b)
 	comp_low          (a,b);
 	comp_low_or_equal (a,b);
 
-	os << bold_orange("**********************************************"); os_nline;
+	os << bold_orange("**********************************************"); os_nline; os_nline;
 }
 
 template <typename A, typename B, typename C>
@@ -73,7 +73,7 @@ void Fixed_Point_Tests::test_comparisons(A a, B b, C c)
 	comp_low          (a,b,c);
 	comp_low_or_equal (a,b,c);
 
-	os << bold_orange("**********************************************"); os_nline;
+	os << bold_orange("**********************************************"); os_nline; os_nline;
 }
 
 
@@ -83,7 +83,7 @@ void Fixed_Point_Tests::test_header(const std::string& method_name, A a,
 {
 	std::stringstream sstream;
 	sstream << "Test \"" << method_name << "\" with "
-	        << str_a << " = " << a.display(header_prec) << a.display_quantification()
+	        << str_a << " = " << a.to_double() << a.display_quantification()
 	        << ":";
 
 	os << bold_blue(sstream.str()); os_nline;
@@ -96,8 +96,8 @@ void Fixed_Point_Tests::test_header(const std::string& method_name, A a, B b,
 {
 	std::stringstream sstream;
 	sstream << "Test \"" << method_name << "\" with "
-	        << str_a << " = " << a.display(header_prec) << a.display_quantification() << ", "
-	        << str_b << " = " << b.display(header_prec) << b.display_quantification()
+	        << str_a << " = " << a.to_double() << a.display_quantification() << ", "
+	        << str_b << " = " << b.to_double() << b.display_quantification()
 	        << ":";
 
 	os << bold_blue(sstream.str()); os_nline;
@@ -111,9 +111,9 @@ void Fixed_Point_Tests::test_header(const std::string& method_name, A a, B b, C 
 {
 	std::stringstream sstream;
 	sstream << "Test \"" << method_name << "\" with "
-	        << str_a << " = " << a.display(header_prec) << a.display_quantification() << ", "
-	        << str_b << " = " << b.display(header_prec) << b.display_quantification() << ", "
-	        << str_c << " = " << c.display(header_prec) << c.display_quantification()
+	        << str_a << " = " << a.to_double() << a.display_quantification() << ", "
+	        << str_b << " = " << b.to_double() << b.display_quantification() << ", "
+	        << str_c << " = " << c.to_double() << c.display_quantification()
 	        << ":";
 
 	os << bold_blue(sstream.str()); os_nline;
@@ -228,7 +228,7 @@ void Fixed_Point_Tests::addition(A a, B b, C c)
 struct substracter_type
 {
 	template <typename A, typename B>
-	auto operator()(const A& a, const B& b) -> decltype(a+b)
+	auto operator()(const A& a, const B& b) -> decltype(a-b)
 	{
 		return a - b;
 	}
@@ -256,7 +256,7 @@ void Fixed_Point_Tests::subtraction(A a, B b, C c)
 struct multiplicater_type
 {
 	template <typename A, typename B>
-	auto operator()(const A& a, const B& b) -> decltype(a+b)
+	auto operator()(const A& a, const B& b) -> decltype(a*b)
 	{
 		return a * b;
 	}
@@ -284,7 +284,7 @@ void Fixed_Point_Tests::multiplication(A a, B b, C c)
 struct diviser_type
 {
 	template <typename A, typename B>
-	auto operator()(const A& a, const B& b) -> decltype(a+b)
+	auto operator()(const A& a, const B& b) -> decltype(a/b)
 	{
 		return a / b;
 	}
