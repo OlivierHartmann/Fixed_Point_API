@@ -1,0 +1,1 @@
+A C++11 (and later) fixed point API that can be compiled with -0fast to allow the fastest program.
