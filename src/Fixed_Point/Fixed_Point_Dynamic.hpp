@@ -10,7 +10,7 @@
 #include <cmath>
 #include <limits>
 
-#include "Fixed_Point_Utils.hpp"
+#include "Fixed_Point_utils.hpp"
 #include "Fixed_Point_Static.hpp"
 
 class Fixed_Point_Dynamic;
