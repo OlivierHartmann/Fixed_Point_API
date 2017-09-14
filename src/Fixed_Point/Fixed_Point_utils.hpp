@@ -7,9 +7,21 @@
 #include <iomanip>
 #include <stdexcept>
 #include <string>
-#include <bitset>
 #include <cmath>
 #include <type_traits>
+
+#if defined(__GNUC__) && defined(__x86_64__)
+
+	namespace std
+	{
+		string to_string( __int128_t __val);
+		string to_string(__uint128_t __val);
+
+	}
+
+	template<class stream_class> stream_class& operator<<(stream_class& s,  __int128_t __val);
+	template<class stream_class> stream_class& operator<<(stream_class& s, __uint128_t __val);
+#endif
 
 namespace FP_numeric
 {
@@ -50,6 +62,56 @@ namespace FP_numeric
 	template <typename FP>
 	std::string short_resume(const FP& n);
 
+	template <typename T>
+	std::string to_bit(const T data);
+
+	template <typename T>
+	std::string to_bit(const T data, const size_t n_bits);
+
+	template <typename T>
+	std::string to_hex(const T data);
+
+	template <typename T>
+	std::string to_hex(const T data, const size_t n_bits);
+
+
+	template<size_t T>
+	struct matching_type
+	{
+		using type = typename std::conditional<T<=sizeof(int8_t)*8, int8_t,
+	                                   typename std::conditional<T<=sizeof(int16_t)*8, int16_t,
+	                                   typename std::conditional<T<=sizeof(int32_t)*8, int32_t,
+	                                   typename std::conditional<T<=sizeof(int64_t)*8, int64_t,
+	                               #if defined(__GNUC__) && defined(__x86_64__)
+	                                   typename std::conditional<T<=sizeof(__int128_t)*8, __int128_t, void>::type
+	                               #else
+	                                   void
+	                               #endif
+	                                   >::type
+	                                   >::type
+	                                   >::type
+	                                 >::type;
+	};
+
+	template<size_t T>
+	struct next_type_from_size
+	{
+		using type = typename std::conditional<std::is_void<typename matching_type<T*2>::type>::value,
+		                                       typename matching_type<T>::type, // no type above
+		                                       typename matching_type<T*2>::type>::type;
+	};
+
+	template<typename T>
+	struct next_type
+	{
+		using type = typename next_type_from_size<sizeof(T)*8>::type;
+	};
+
+	template<typename T1, typename T2>
+	struct biggest_type
+	{
+		using type = typename std::conditional<sizeof(T1) >= sizeof(T2), T1, T2>::type;
+	};
 }
 
 #include "Fixed_Point_utils.hxx"

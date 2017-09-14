@@ -1,6 +1,61 @@
 #ifndef FIXED_POINT_UTILS_HXX_
 #define FIXED_POINT_UTILS_HXX_
 
+#if defined(__GNUC__) && defined(__x86_64__)
+
+inline std::string std::to_string(__int128_t __val)
+{
+	__uint128_t tmp = __val < 0 ? -__val : __val;
+    char buffer[ 128 ];
+    char* d = std::end( buffer );
+    do
+    {
+        -- d;
+        *d = "0123456789"[ tmp % 10 ];
+        tmp /= 10;
+    } while ( tmp != 0 );
+
+    if ( __val < 0 )
+    {
+        -- d;
+        *d = '-';
+    }
+    int len = std::end( buffer ) - d;
+
+    string s(d, len);
+	return s;
+}
+
+inline std::string std::to_string(__uint128_t __val)
+{
+	string s = __gnu_cxx::__to_xstring<string>(&std::vsnprintf, 4 * sizeof(__int128)/2,
+				   "%d", (uint64_t)__val);
+	s += __gnu_cxx::__to_xstring<string>(&std::vsnprintf, 4 * sizeof(__int128)/2,
+				   "%d", (uint64_t)(__val >> 64));
+
+	return s;
+}
+
+template<class stream_class>
+inline stream_class& operator<<(stream_class& s, __int128_t __val)
+{
+	s << (int64_t)(__val >> 64);
+	s << (int64_t)__val;
+
+	return s;
+}
+
+template<class stream_class>
+inline stream_class& operator<<(stream_class& s, __uint128_t __val)
+{
+	s << (uint64_t)(__val >> 64);
+	s << (uint64_t)__val;
+
+	return s;
+}
+
+#endif
+
 // return the given value val saturated (if needed) between min and max in function of the Arithmetic_type
 template <typename T>
 inline T FP_numeric::saturate(const T val, const T min, const T max, const FP_numeric::Arithmetic_type ar_type)
@@ -126,21 +181,18 @@ inline std::string FP_numeric::resume(const FP& n)
 	str += "value  = "; str += std::to_string(n.to_double()) + n.display_quantification() + std::string("\n");
 	str += "sign   = "; str += (n.sign() ? std::string("neg") : std::string("pos"));
 	str += ", abs = " ; str += std::to_string(n.abs().to_double()) + std::string("\n");
-	str += "int    = "; str += std::to_string(n.to_int());
-	str += ", uint = "; str += std::to_string(n.to_uint()) + std::string("\n");
-	str += "bin    = "; str += std::bitset<FP::capacity>(n.get_data()).to_string()
-	                        +  std::string(" (") + std::to_string((int64_t)(n.get_data())) + std::string(")\n");
+	str += "bin    = "; str += n.to_bin() + std::string(" (") + std::to_string(n.get_data()) + std::string(")\n");
 	str += "hex    = "; str += n.to_hex() + std::string("\n");
-	str += "f mask = "; str += std::bitset<FP::capacity>(n.get_fractional_mask()).to_string()
+	str += "f mask = "; str += to_bit(n.get_fractional_mask())
 	                        +  std::string(" (") + std::to_string(n.get_fractional_bits()) + std::string(")\n");
-	str += "i mask = "; str += std::bitset<FP::capacity>(n.get_integer_mask()).to_string()
+	str += "i mask = "; str += to_bit(n.get_integer_mask())
 	                        +  std::string(" (") + std::to_string(n.get_integer_bits()) + std::string(")\n");
-	str += "n mask = "; str += std::bitset<FP::capacity>(n.get_number_mask()).to_string() +std::string("\n");
-	str += "one    = "; str += std::bitset<FP::capacity>(n.get_one()).to_string()
+	str += "n mask = "; str += to_bit(n.get_number_mask()) + std::string("\n");
+	str += "one    = "; str += n.one().to_bin()
 	                        +  std::string(" (") + std::to_string(n.one().to_double()) + std::string(")\n");
-	str += "max    = "; str += std::bitset<FP::capacity>(n.get_max()).to_string()
+	str += "max    = "; str += n.max().to_bin()
 	                        +  std::string(" (") + std::to_string(n.max().to_double()) + std::string(")\n");
-	str += "min    = "; str += std::bitset<FP::capacity>(n.get_min()).to_string()
+	str += "min    = "; str += n.min().to_bin()
 	                        +  std::string(" (") + std::to_string(n.min().to_double()) + std::string(")\n");
 	str += std::string("\n");
 	return str;
@@ -151,31 +203,58 @@ inline std::string FP_numeric::short_resume(const FP& n)
 {
 	std::string str;
 	str += "value  = "; str += std::to_string(n.to_double()) + n.display_quantification() + std::string("\n");
-	str += "bin    = "; str += std::bitset<FP::capacity>((int64_t)n.get_data()).to_string()
-	                        +  std::string(" (") + std::to_string(n.get_data()) + std::string(")\n");
+	str += "bin    = "; str += n.to_sbin() +  std::string(" (") + std::to_string(n.get_data()) + std::string(")\n");
 
-	str += "mask   = ";
+	str += "mask   = "; str += "S"; str.append(n.get_integer_bits(), 'I');  str.append(n.get_fractional_bits(), 'F');
+	                    str += std::string("\n");
+	str += "hex    = "; str += n.to_shex() + std::string("\n");
 
-	for (int var = sizeof(typename FP::base_type)*8-1; var >= 0; --var) {
-		typename FP::base_type mask = (typename FP::base_type)1 << var;
-
-		if(n.get_number_mask() & mask)
-		{
-			if(n.get_fractional_mask() & mask)
-				str += "F";
-
-			else if(n.get_integer_mask() & mask)
-				str += "I";
-
-			else
-				str += "S";
-		}
-		else
-			str += "0";
-	}
-	str += std::string("\n");
 	str += std::string("\n");
 	return str;
 }
 
+
+template <typename T>
+inline std::string FP_numeric::to_bit(const T data)
+{
+	return to_bit(data, sizeof(T)*8);
+}
+
+template <typename T>
+inline std::string FP_numeric::to_bit(const T data, const size_t n_bits)
+{
+	std::string s(n_bits, '0');
+
+	auto s_it = s.end() -1;
+
+	for(unsigned i = 0; i < n_bits; i++)
+	{
+		if(data >> i & (T)1)
+			*s_it = '1';
+		s_it--;
+	}
+
+	return s;
+}
+
+template <typename T>
+inline std::string FP_numeric::to_hex(const T data)
+{
+	return to_hex(data, sizeof(T)*8);
+}
+
+template <typename T>
+inline std::string FP_numeric::to_hex(const T data, const size_t n_bits)
+{
+	size_t n_mibytes = n_bits/4 + (n_bits%4 ? 1 : 0);
+
+	std::stringstream ss;
+	ss << std::setfill('0') << std::setw(n_mibytes) << std::hex
+	   << (static_cast<typename std::conditional<sizeof(T) == 1, int, T>::type>(data));
+
+	std::string str;
+	ss >> str;
+
+	return str.substr(str.size()-n_mibytes);
+}
 #endif /* FIXED_POINT_UTILS_HXX_ */

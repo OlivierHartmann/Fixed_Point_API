@@ -5,7 +5,6 @@
 #include <iostream>
 #include <exception>
 #include <string>
-#include <bitset>
 #include <sstream>
 #include <iomanip>
 #include <type_traits>
@@ -19,19 +18,7 @@ template <size_t T, size_t F>
 class Fixed_Point_Static
 {
 public:
-	using base_type = typename std::conditional<T<=sizeof(int8_t)*8, int8_t,
-	                                   typename std::conditional<T<=sizeof(int16_t)*8, int16_t,
-	                                   typename std::conditional<T<=sizeof(int32_t)*8, int32_t,
-	                                   typename std::conditional<T<=sizeof(int64_t)*8, int64_t,
-	                               #if defined(__GNUC__) && defined(__x86_64__)
-	                                   typename std::conditional<T<=sizeof(__int128_t)*8, __int128_t, void>::type
-	                               #else
-	                                   void
-	                               #endif
-	                                   >::type
-	                                   >::type
-	                                   >::type
-	                                 >::type;
+	using base_type = typename FP_numeric::matching_type<T>::type;
 
 	static_assert(!std::is_void<base_type>::value, "Error in Fixed_Point_Static : T > "
 	                                 #if defined(__GNUC__) && defined(__x86_64__)
@@ -42,8 +29,8 @@ public:
 	                                        " bits!"
 	);
 
-	static_assert(T >  0, "Error in Fixed_Point_Static : T == 0!");
-	static_assert(T >= F, "Error in Fixed_Point_Static : T < F!");
+	static_assert(T > 0, "Error in Fixed_Point_Static : T == 0!");
+	static_assert(T > F, "Error in Fixed_Point_Static : T <= F!"); // TODO: if signed, else can be ==
 
 	static const size_t Tb       = T;
 	static const size_t Fb       = F;
@@ -61,7 +48,7 @@ private: //automatically calculated
 	static const base_type __fractional_mask =  ~((~base_type(0)) << __fractional_bits);
 	static const base_type __integer_mask    = (~((~base_type(0)) << __integer_bits   )) << __fractional_bits;
 	static const base_type __max_            = __integer_mask | __fractional_mask;
-	static const base_type __min_            = ((__ar_type == FP_numeric::Arithmetic_type::SIGNED_SATURATED)? -__max_ : 0);
+	static const base_type __min_            = ((__ar_type == FP_numeric::Arithmetic_type::SIGNED_SATURATED)? -__max_ : 0); // symmetric value range dynamic
 	static const base_type __number_mask     = ((__ar_type == FP_numeric::Arithmetic_type::SIGNED_SATURATED)? ((__integer_mask | __fractional_mask) << 1) +1
 	                                                                                                        :  (__integer_mask | __fractional_mask));
 
@@ -81,7 +68,7 @@ public: // constructors
 
 public:
 	// return the given value val saturated (if needed) with the configuration of this Fixed_Point_Static
-	template <typename type> type saturate(const type val) const;
+	template <typename type> base_type saturate(const type val) const;
 
 	// return the __data value of this Fixed_Point_Static with the point set at the new_fract_bits position
 	base_type shift_fract(const size_t new_fract_bits                             ) const;
