@@ -10,7 +10,7 @@
 #include <cmath>
 #include <type_traits>
 
-#if defined(__GNUC__) && defined(__x86_64__)
+#if defined(__GNUC__) && defined(__x86_64__) && defined(ENABLE_128_BITS)
 
 	namespace std
 	{
@@ -19,8 +19,8 @@
 
 	}
 
-	template<class stream_class> stream_class& operator<<(stream_class& s,  __int128_t __val);
-	template<class stream_class> stream_class& operator<<(stream_class& s, __uint128_t __val);
+	std::ostream& operator<<(std::ostream& s,  __int128_t __val);
+	std::ostream& operator<<(std::ostream& s, __uint128_t __val);
 #endif
 
 namespace FP_numeric
@@ -82,7 +82,7 @@ namespace FP_numeric
 	                                   typename std::conditional<T<=sizeof(int16_t)*8, int16_t,
 	                                   typename std::conditional<T<=sizeof(int32_t)*8, int32_t,
 	                                   typename std::conditional<T<=sizeof(int64_t)*8, int64_t,
-	                               #if defined(__GNUC__) && defined(__x86_64__)
+	                               #if defined(__GNUC__) && defined(__x86_64__) && defined(ENABLE_128_BITS)
 	                                   typename std::conditional<T<=sizeof(__int128_t)*8, __int128_t, void>::type
 	                               #else
 	                                   void

@@ -6,9 +6,9 @@
 #include <string>
 #include <stdexcept>
 
-#include "Fixed_Point/Fixed_Point_Static.hpp"
+#include "../Fixed_Point/Fixed_Point_Static.hpp"
 
-#include "bash_tools/bash_tools.h"
+#include "../bash_tools/bash_tools.h"
 
 class Fixed_Point_Tests
 {

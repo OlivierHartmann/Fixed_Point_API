@@ -6,3 +6,5 @@ See FP_S_global_functioning.cpp for many more details and examples.
 
 Call Fixed_Point_Static.hpp in your program to use it.
 See also Fixed_Point_Static_operators.hpp for more available operators.
+
+Use ENABLE_128_BITS flag at compile time to use 128 bits FP on x86_64 linux.

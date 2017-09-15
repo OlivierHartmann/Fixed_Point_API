@@ -1,7 +1,7 @@
 #ifndef FIXED_POINT_UTILS_HXX_
 #define FIXED_POINT_UTILS_HXX_
 
-#if defined(__GNUC__) && defined(__x86_64__)
+#if defined(__GNUC__) && defined(__x86_64__) && defined(ENABLE_128_BITS)
 
 inline std::string std::to_string(__int128_t __val)
 {
@@ -36,8 +36,7 @@ inline std::string std::to_string(__uint128_t __val)
 	return s;
 }
 
-template<class stream_class>
-inline stream_class& operator<<(stream_class& s, __int128_t __val)
+inline std::ostream& operator<<(std::ostream& s, __int128_t __val)
 {
 	s << (int64_t)(__val >> 64);
 	s << (int64_t)__val;
@@ -45,8 +44,7 @@ inline stream_class& operator<<(stream_class& s, __int128_t __val)
 	return s;
 }
 
-template<class stream_class>
-inline stream_class& operator<<(stream_class& s, __uint128_t __val)
+inline std::ostream& operator<<(std::ostream& s, __uint128_t __val)
 {
 	s << (uint64_t)(__val >> 64);
 	s << (uint64_t)__val;

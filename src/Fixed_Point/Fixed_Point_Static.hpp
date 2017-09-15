@@ -21,12 +21,12 @@ public:
 	using base_type = typename FP_numeric::matching_type<T>::type;
 
 	static_assert(!std::is_void<base_type>::value, "Error in Fixed_Point_Static : T > "
-	                                 #if defined(__GNUC__) && defined(__x86_64__)
+	                                 #if defined(__GNUC__) && defined(__x86_64__) && defined(ENABLE_128_BITS)
 	                                        "128"
 	                                 #else
 	                                        "64"
 	                                 #endif
-	                                        " bits!"
+	                                        " bits! T"
 	);
 
 	static_assert(T > 0, "Error in Fixed_Point_Static : T == 0!");

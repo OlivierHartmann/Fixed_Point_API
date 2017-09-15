@@ -154,8 +154,9 @@ void Fixed_Point_Tests::test_method(A a, B b, Functor f)
 		auto comp_res  = fp_res == float_res;
 
 		std::stringstream sstream;
-		sstream << fp_res << ",   float : "  << std::setprecision(6) << std::setw(8) << float_res
-				<< ",   comp : " << comp_res;
+		sstream << fp_res;
+		sstream << ",   float : "  << std::setprecision(6) << std::setw(8) << float_res;
+		sstream << ",   comp : " << comp_res;
 
 		if (comp_res)
 			os << green(sstream.str());
