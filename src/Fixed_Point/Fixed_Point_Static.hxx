@@ -48,18 +48,7 @@ struct FP_numeric::mod_res_type_d
 };
 
 template <size_t Tl, size_t Fl, size_t Tr, size_t Fr>
-struct FP_numeric::max_res_type_d
-{
-	using type = typename std::conditional<(Tl - Fl) >= (Tr - Fr), // compare integral part
-	                                      typename std::conditional<Fl >= Fr, Fixed_Point_Static<Tl,       Fl>,
-	                                                                          Fixed_Point_Static<Tl-Fl+Fr, Fr>>::type,
-	                                      typename std::conditional<Fl >= Fr, Fixed_Point_Static<Tr-Fr+Fl, Fl>,
-	                                                                          Fixed_Point_Static<Tr,       Fr>>::type
-	                                      >::type;
-};
-
-template <size_t Tl, size_t Fl, size_t Tr, size_t Fr>
-struct FP_numeric::min_res_type_d
+struct FP_numeric::comp_res_type_d
 {
 	using type = typename std::conditional<(Tl - Fl) >= (Tr - Fr), // compare integral part
 	                                      typename std::conditional<Fl >= Fr, Fixed_Point_Static<Tl,       Fl>,
@@ -101,16 +90,11 @@ struct FP_numeric::mod_res_type
 };
 
 template <typename FPl, typename FPr>
-struct FP_numeric::max_res_type
+struct FP_numeric::comp_res_type
 {
-	using type = typename max_res_type_d<FPl::Tb, FPl::Fb, FPr::Tb, FPr::Fb>::type;
+	using type = typename comp_res_type_d<FPl::Tb, FPl::Fb, FPr::Tb, FPr::Fb>::type;
 };
 
-template <typename FPl, typename FPr>
-struct FP_numeric::min_res_type
-{
-	using type = typename min_res_type_d<FPl::Tb, FPl::Fb, FPr::Tb, FPr::Fb>::type;
-};
 
 // contructors
 template <size_t T, size_t F>
@@ -145,16 +129,10 @@ inline typename Fixed_Point_Static<T,F>::base_type Fixed_Point_Static<T,F>::shif
 }
 
 template <size_t T, size_t F>
-inline typename Fixed_Point_Static<T,F>::base_type Fixed_Point_Static<T,F>::shift_fract(const size_t new_fract_bits, const size_t old_fract_bits) const
-{
-	return FP_numeric::shift_fract(__data, new_fract_bits, old_fract_bits);
-}
-
-template <size_t T, size_t F>
 template <size_t To, size_t Fo>
 inline bool Fixed_Point_Static<T,F>::operator> (const Fixed_Point_Static<To, Fo>& o) const
 {
-	using comp_type = typename FP_numeric::max_res_type_d<T, F, To, Fo>::type;
+	using comp_type = typename FP_numeric::comp_res_type_d<T, F, To, Fo>::type;
 	using big_type  = typename comp_type::base_type;
 
 	big_type t_d = FP_numeric::shift_fract(big_type(__data      ), comp_type::Fb, F );
@@ -166,7 +144,8 @@ template <size_t T, size_t F>
 template <size_t To>
 inline bool Fixed_Point_Static<T,F>::operator> (const Fixed_Point_Static<To, F >& o) const
 {
-	return (__data > o.get_data());
+	using big_type = typename FP_numeric::biggest_type<base_type, typename Fixed_Point_Static<To, F>::base_type>::type;
+	return ((big_type)__data > (big_type)o.get_data());
 }
 
 template <size_t T, size_t F>
@@ -223,7 +202,7 @@ template <size_t T, size_t F>
 template <size_t To, size_t Fo>
 inline bool Fixed_Point_Static<T,F>::operator==(const Fixed_Point_Static<To, Fo>& o) const
 {
-	using comp_type = typename FP_numeric::max_res_type_d<T, F, To, Fo>::type;
+	using comp_type = typename FP_numeric::comp_res_type_d<T, F, To, Fo>::type;
 	using big_type  = typename comp_type::base_type;
 
 	big_type t_d = FP_numeric::shift_fract(big_type(__data      ), comp_type::Fb, F );
@@ -558,7 +537,7 @@ inline Fixed_Point_Static<T,F> Fixed_Point_Static<T,F>::abs () const
 template <size_t T, size_t F>
 inline int Fixed_Point_Static<T,F>::sign() const
 {
-	return is_sneg() ? -1       : 0;
+	return is_sneg() ? -1 : 0;
 }
 
 
@@ -568,13 +547,19 @@ template <typename uintegral_t>
 inline typename std::enable_if< std::is_integral<uintegral_t>::value && std::is_unsigned<uintegral_t>::value, uintegral_t>::type
 Fixed_Point_Static<T,F>::convert() const // to unsigned integer
 {
-	if(__fractional_bits == 0)
-		return (uintegral_t)(__data & __number_mask);
+	base_type temp;
 
-	if((__data & __fractional_mask) >> ((__fractional_bits == 0)? 0 : (__fractional_bits-1))) // (__fractional_bits == 0)? to avoid the compilator warning
-		return (uintegral_t)((saturate(__data + __one) & __number_mask) >> __fractional_bits); // rounded upper
+	if(__data & (__one >> 1)) // check the most significant fractional bit is 1
+		temp = ((saturate(__data + __one) & __number_mask) >> __fractional_bits); // rounded upper
+
+	else // if the most significant fractional bit is 0 or if fractional part size is null
+		temp = ((__data & __number_mask) >> __fractional_bits); // rounded lower
+
+	if(sizeof(uintegral_t) < sizeof(base_type))
+		return (uintegral_t)FP_numeric::saturate_max(temp, (base_type)std::numeric_limits<uintegral_t>::max(), FP_numeric::Arithmetic_type::SIGNED_SATURATED);
+
 	else
-		return (uintegral_t)((__data & __number_mask) >> __fractional_bits); // rounded lower
+		return (uintegral_t)temp;
 }
 
 template <size_t T, size_t F>
@@ -582,13 +567,18 @@ template <typename sintegral_t>
 inline typename std::enable_if< std::is_integral<sintegral_t>::value && std::is_signed<sintegral_t>::value, sintegral_t>::type
 Fixed_Point_Static<T,F>::convert() const // to signed integer
 {
-	if(__fractional_bits == 0)
-		return (sintegral_t)__data;
+	base_type temp;
 
-	if((__data & __fractional_mask) >> ((__fractional_bits == 0)? 0 : (__fractional_bits-1)))
-		return (sintegral_t)(saturate(__data + __one) >> __fractional_bits); // rounded upper
+	if(__data & (__one >> 1)) // check the most significant fractional bit is 1
+		temp = (saturate(__data + __one) >> __fractional_bits); // rounded upper
+	else // if the most significant fractional bit is 0 or if fractional part size is null
+		temp = (__data >> __fractional_bits); // rounded lower
+
+	if(sizeof(sintegral_t) < sizeof(base_type))
+		return (sintegral_t)FP_numeric::saturate(temp, (base_type)std::numeric_limits<sintegral_t>::min(), (base_type)std::numeric_limits<sintegral_t>::max(), FP_numeric::Arithmetic_type::SIGNED_SATURATED);
+
 	else
-		return (sintegral_t)(__data >> __fractional_bits); // rounded lower
+		return (sintegral_t)temp;
 }
 
 template <size_t T, size_t F>
@@ -660,13 +650,13 @@ inline    double Fixed_Point_Static<T,F>::to_double() const
 template <size_t T, size_t F>
 inline std::string Fixed_Point_Static<T,F>::to_bin() const
 {
-	return FP_numeric::to_bit(__data);
+	return FP_numeric::to_bin(__data);
 }
 
 template <size_t T, size_t F>
 inline std::string Fixed_Point_Static<T,F>::to_sbin() const
 {
-	return FP_numeric::to_bit(__data, __total_bits);
+	return FP_numeric::to_bin(__data, __total_bits);
 }
 
 template <size_t T, size_t F>

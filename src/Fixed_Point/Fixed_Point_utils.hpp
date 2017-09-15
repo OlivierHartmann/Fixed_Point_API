@@ -63,10 +63,10 @@ namespace FP_numeric
 	std::string short_resume(const FP& n);
 
 	template <typename T>
-	std::string to_bit(const T data);
+	std::string to_bin(const T data);
 
 	template <typename T>
-	std::string to_bit(const T data, const size_t n_bits);
+	std::string to_bin(const T data, const size_t n_bits);
 
 	template <typename T>
 	std::string to_hex(const T data);

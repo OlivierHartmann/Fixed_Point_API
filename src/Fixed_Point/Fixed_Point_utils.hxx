@@ -183,11 +183,11 @@ inline std::string FP_numeric::resume(const FP& n)
 	str += ", abs = " ; str += std::to_string(n.abs().to_double()) + std::string("\n");
 	str += "bin    = "; str += n.to_bin() + std::string(" (") + std::to_string(n.get_data()) + std::string(")\n");
 	str += "hex    = "; str += n.to_hex() + std::string("\n");
-	str += "f mask = "; str += to_bit(n.get_fractional_mask())
+	str += "f mask = "; str += to_bin(n.get_fractional_mask())
 	                        +  std::string(" (") + std::to_string(n.get_fractional_bits()) + std::string(")\n");
-	str += "i mask = "; str += to_bit(n.get_integer_mask())
+	str += "i mask = "; str += to_bin(n.get_integer_mask())
 	                        +  std::string(" (") + std::to_string(n.get_integer_bits()) + std::string(")\n");
-	str += "n mask = "; str += to_bit(n.get_number_mask()) + std::string("\n");
+	str += "n mask = "; str += to_bin(n.get_number_mask()) + std::string("\n");
 	str += "one    = "; str += n.one().to_bin()
 	                        +  std::string(" (") + std::to_string(n.one().to_double()) + std::string(")\n");
 	str += "max    = "; str += n.max().to_bin()
@@ -215,13 +215,13 @@ inline std::string FP_numeric::short_resume(const FP& n)
 
 
 template <typename T>
-inline std::string FP_numeric::to_bit(const T data)
+inline std::string FP_numeric::to_bin(const T data)
 {
-	return to_bit(data, sizeof(T)*8);
+	return to_bin(data, sizeof(T)*8);
 }
 
 template <typename T>
-inline std::string FP_numeric::to_bit(const T data, const size_t n_bits)
+inline std::string FP_numeric::to_bin(const T data, const size_t n_bits)
 {
 	std::string s(n_bits, '0');
 

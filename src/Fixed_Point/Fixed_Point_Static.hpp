@@ -71,18 +71,15 @@ public:
 	template <typename type> base_type saturate(const type val) const;
 
 	// return the __data value of this Fixed_Point_Static with the point set at the new_fract_bits position
-	base_type shift_fract(const size_t new_fract_bits                             ) const;
-	base_type shift_fract(const size_t new_fract_bits, const size_t old_fract_bits) const;
+	base_type shift_fract(const size_t new_fract_bits) const;
 
-public: // relational operators
-
+public: // relational operators : TODO : manage risks of overflow in extrem cases
 	template <size_t To, size_t Fo> bool operator> (const Fixed_Point_Static<To, Fo>& o) const;
 	template <size_t To           > bool operator> (const Fixed_Point_Static<To, F >& o) const;
 	template <size_t To, size_t Fo> bool operator< (const Fixed_Point_Static<To, Fo>& o) const;
 	template <size_t To, size_t Fo> bool operator<=(const Fixed_Point_Static<To, Fo>& o) const;
 	template <size_t To, size_t Fo> bool operator>=(const Fixed_Point_Static<To, Fo>& o) const;
 
-	// TODO : manage risk of overflow
 	template <typename type> bool operator> (const type n) const;
 	template <typename type> bool operator< (const type n) const;
 	template <typename type> bool operator<=(const type n) const;
@@ -95,7 +92,7 @@ public: // relational operators
 	template <typename type> bool operator==(const type n) const;
 	template <typename type> bool operator!=(const type n) const;
 
-	bool operator! ( ) const;
+	bool operator! ( ) const; // true if the this fixed point is null
 
 	// compare the quantification of this Fixed_Point_Static with the given one
 	bool same_quantification(size_t total_bits, size_t fractional_bits) const;
@@ -167,7 +164,7 @@ public: // math functions
 	bool is_sat () const;
 
 	Fixed_Point_Static<T,F> abs () const;
-	int                     sign() const;
+	int                     sign() const; // return 0 if positive else (-1)
 
 public: // conversion to common types
 	//convert properly __data taking into account the comma position
@@ -301,10 +298,7 @@ namespace FP_numeric
 	struct mod_res_type_d;
 
 	template <size_t Tl, size_t Fl, size_t Tr, size_t Fr>
-	struct max_res_type_d;
-
-	template <size_t Tl, size_t Fl, size_t Tr, size_t Fr>
-	struct min_res_type_d;
+	struct comp_res_type_d;
 
 
 	template <typename FPl, typename FPr>
@@ -323,10 +317,7 @@ namespace FP_numeric
 	struct mod_res_type;
 
 	template <typename FPl, typename FPr>
-	struct max_res_type;
-
-	template <typename FPl, typename FPr>
-	struct min_res_type;
+	struct comp_res_type;
 }
 
 template <size_t T, size_t F>

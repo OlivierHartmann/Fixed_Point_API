@@ -223,11 +223,11 @@ namespace std
 	std::string             to_string(const Fixed_Point_Static<T,F>& __x);
 
 	template <size_t Tl, size_t Fl, size_t Tr, size_t Fr>
-	typename FP_numeric::max_res_type_d<Tl, Fl, Tr, Fr>::type
+	typename FP_numeric::comp_res_type_d<Tl, Fl, Tr, Fr>::type
 	max(const Fixed_Point_Static<Tl,Fl>& lhs, const Fixed_Point_Static<Tr,Fr>& rhs);
 
 	template <size_t Tl, size_t Fl, size_t Tr, size_t Fr>
-	typename FP_numeric::min_res_type_d<Tl, Fl, Tr, Fr>::type
+	typename FP_numeric::comp_res_type_d<Tl, Fl, Tr, Fr>::type
 	min(const Fixed_Point_Static<Tl,Fl>& lhs, const Fixed_Point_Static<Tr,Fr>& rhs);
 
 	template <size_t T, size_t F>

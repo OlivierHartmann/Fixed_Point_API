@@ -126,7 +126,7 @@ FP_numeric::div(const Fixed_Point_Static<Tn, Fn>& numerator, const Fixed_Point_S
 template <size_t Tn, size_t Fn, size_t Td, size_t Fd, size_t Tq, size_t Fq, size_t Tr, size_t Fr>
 inline void
 FP_numeric::div(const Fixed_Point_Static<Tn, Fn>& numerator, const Fixed_Point_Static<Td, Fd>& denominator,
-          Fixed_Point_Static<Tq, Fq>& quotient ,       Fixed_Point_Static<Tr, Fr>& remainder)
+                Fixed_Point_Static<Tq, Fq>& quotient , Fixed_Point_Static<Tr, Fr>& remainder)
 {
 	quotient  = numerator/denominator;
 	remainder = FP_numeric::sub(numerator, FP_numeric::mul(quotient, denominator));
@@ -137,10 +137,11 @@ inline typename FP_numeric::mod_res_type_d<Tl, Fl, Tr, Fr>::type
 FP_numeric::mod(const Fixed_Point_Static<Tl, Fl>& lhs, const Fixed_Point_Static<Tr, Fr>& rhs)
 {
 	using __res_t = typename FP_numeric::mod_res_type_d<Tl, Fl, Tr, Fr>::type;
+	using big_type = typename __res_t::base_type;
 	__res_t res;
 	// TODO : manage risk of overflow when shifting
-	res.set_data((__res_t::base_type)(lhs.shift_fract(res.get_fractional_bits()))
-	           % (__res_t::base_type)(rhs.shift_fract(res.get_fractional_bits())));
+	res.set_data((big_type)(lhs.shift_fract(res.get_fractional_bits()))
+	           % (big_type)(rhs.shift_fract(res.get_fractional_bits())));
 	return res;
 }
 
@@ -431,10 +432,10 @@ namespace std
 	}
 
 	template <size_t Tl, size_t Fl, size_t Tr, size_t Fr>
-	inline typename FP_numeric::max_res_type_d<Tl, Fl, Tr, Fr>::type
+	inline typename FP_numeric::comp_res_type_d<Tl, Fl, Tr, Fr>::type
 	max(const Fixed_Point_Static<Tl,Fl>& lhs, const Fixed_Point_Static<Tr,Fr>& rhs)
 	{
-		typename FP_numeric::max_res_type_d<Tl, Fl, Tr, Fr>::type res;
+		typename FP_numeric::comp_res_type_d<Tl, Fl, Tr, Fr>::type res;
 		if(lhs > rhs)
 			res = lhs;
 		else
@@ -443,10 +444,10 @@ namespace std
 	}
 
 	template <size_t Tl, size_t Fl, size_t Tr, size_t Fr>
-	inline typename FP_numeric::min_res_type_d<Tl, Fl, Tr, Fr>::type
+	inline typename FP_numeric::comp_res_type_d<Tl, Fl, Tr, Fr>::type
 	min(const Fixed_Point_Static<Tl,Fl>& lhs, const Fixed_Point_Static<Tr,Fr>& rhs)
 	{
-		typename FP_numeric::min_res_type_d<Tl, Fl, Tr, Fr>::type res;
+		typename FP_numeric::comp_res_type_d<Tl, Fl, Tr, Fr>::type res;
 		if(lhs < rhs)
 			res = lhs;
 		else
